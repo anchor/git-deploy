@@ -1,0 +1,19 @@
+.\" Manpage for git-deploy
+.TH man 1 "March 2014" "1.0" "git deploy man page"
+.SH NAME
+git deploy \- Deploy your codebase to staging/production
+.SH SYNOPSIS
+git deploy <environment>
+.SH DESCRIPTION
+Tag the current state of the branch and deploy it to an environment.
+.SH OPTIONS
+.TP
+.I <environment>
+Name of the environment to deploy to, the config for which is kept in .gitdeploy-<environment>
+.I
+.SH SEE ALSO
+git-for-each-ref(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Barney Desmond <barneydesmond@gmail.com>

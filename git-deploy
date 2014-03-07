@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -e
+
+GIT_OPTS=""
+OUTPUT_FILTER="cat" # no-op
+
+commit_id_format=$(tput setaf 1)
+date_format=$(tput bold; tput setaf 4)
+author_format=$(tput setaf 2)
+ref_name_format=$(tput setaf 3)
+bold=$(tput bold)
+red=$(tput setaf 1)
+reset=$(tput sgr0)
+
+function usage() {
+    echo ""
+    echo "git deploy <environment>"
+    echo ""
+    echo "  See 'man git-deploy' for further information"
+}
+
+# actually parse the options and do stuff
+while [[ $1 = -?* ]]; do
+    case $1 in
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        --fetch)
+            echo "Fetch updates"
+            echo "    git fetch -q"
+            ;;
+        *) ;;
+    esac
+
+shift
+done
+
+if [ $# -ne 1 ] ; then
+	usage
+	exit 0
+fi
+
+DEPLOY_ENV=$1
+echo "Deploying to: ${bold}${DEPLOY_ENV}${reset}"
+
+DEPLOY_CONFIG=".gitdeploy-${DEPLOY_ENV}"
+echo "Looking for config file: ${DEPLOY_CONFIG}"
+
+if [ ! -f "${DEPLOY_CONFIG}" ] ; then
+	echo "${red}Can't find deploy config ${DEPLOY_CONFIG}, exiting.${reset}"
+	exit 1
+fi
+
+
+echo "Do a whole bunch of tag reading, updating, tag-applying, pushing"
+
+source "$DEPLOY_CONFIG"
+ssh "${GITDEPLOY_SSH_USER}@${GITDEPLOY_SSH_HOST}" -- make -C "$GITDEPLOY_DIR" "$GITDEPLOY_MAKETARGET"
