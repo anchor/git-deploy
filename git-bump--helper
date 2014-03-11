@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -e
+
+bold=$(tput bold)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+orange=$(tput setaf 3)
+darkblue=$(tput setaf 4)
+purple=$(tput setaf 5)
+aqua=$(tput setaf 6)
+white=$(tput setaf 7)
+reset=$(tput sgr0)
+
+#params=$#
+#param=1
+#while [ "$param" -le "$params" ] ; do
+#	echo -n "Parameter \$$param = "
+#	eval echo "\$$param"
+#	(( param ++ ))
+#done
+
+
+VERSIONING=$1
+shift
+
+case $VERSIONING in
+	ANCHOR-STANDARD-STAGING)
+		echo "call ${green}ANCHOR-STANDARD-STAGING${reset}"
+		MYSELF=$(basename $0)
+		#echo "Will exec: ${MYSELF}-${VERSIONING}"
+		"${MYSELF}-${VERSIONING}"
+		;;
+	ANCHOR-STANDARD-PRODUCTION)
+		echo "call ${green}ANCHOR-STANDARD-PRODUCTION${reset}"
+		MYSELF=$(basename $0)
+		#echo "Will exec: ${MYSELF}-${VERSIONING}"
+		"${MYSELF}-${VERSIONING}"
+		;;
+	*)
+		echo "${red}${VERSIONING} is not a recognised versioning style${reset}"
+		exit 1
+		;;
+esac
+
+

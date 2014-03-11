@@ -1,0 +1,16 @@
+[environment "staging"]
+	versioning = ANCHOR-STANDARD-STAGING
+	user = furinkan
+	host = misaka.meidokon.net
+	command = printf 'echo %s >> ~/public_html/furinkan.meidokon.net/files/git-deploy-version.txt' staging-1394517853
+
+[environment "production"]
+	versioning = ANCHOR-STANDARD-PRODUCTION
+	user = furinkan
+	host = misaka.anchor.net.au
+	command = printf 'echo %s >> ~/public_html/furinkan.meidokon.net/files/git-deploy-version.txt' production-1394517796
+
+[environment "foo.bar.baz.quux"]
+	versioning = SUPAH-FAKE
+
+# vim: syntax=gitconfig
