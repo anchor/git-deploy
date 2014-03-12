@@ -26,19 +26,19 @@ shift
 
 case $VERSIONING in
 	ANCHOR-STANDARD-STAGING)
-		echo "call ${green}ANCHOR-STANDARD-STAGING${reset}"
 		MYSELF=$(basename $0)
 		#echo "Will exec: ${MYSELF}-${VERSIONING}"
 		"${MYSELF}-${VERSIONING}"
 		;;
 	ANCHOR-STANDARD-PRODUCTION)
-		echo "call ${green}ANCHOR-STANDARD-PRODUCTION${reset}"
 		MYSELF=$(basename $0)
 		#echo "Will exec: ${MYSELF}-${VERSIONING}"
 		"${MYSELF}-${VERSIONING}"
 		;;
 	*)
+		MYSELF=$(basename $0)
 		echo "${red}${VERSIONING} is not a recognised versioning style${reset}"
+		echo "(but if it were, I'd execute:  ${MYSELF}-${VERSIONING})"
 		exit 1
 		;;
 esac

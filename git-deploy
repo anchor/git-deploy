@@ -1,89 +1,89 @@
 #!/bin/bash
 
-
-# XXX: This file is bollocks, it needs to be JUST the deployment, not the git-bump'ing
-
 set -e
 
 GIT_REPO_ROOT=$(git rev-parse --show-toplevel)
-GIT_OPTS=""
-OUTPUT_FILTER="cat" # no-op
+DEPLOY_CONFIG="${GIT_REPO_ROOT}/.git-deploy"
 
-commit_id_format=$(tput setaf 1)
-date_format=$(tput bold; tput setaf 4)
-author_format=$(tput setaf 2)
-ref_name_format=$(tput setaf 3)
 bold=$(tput bold)
 red=$(tput setaf 1)
+green=$(tput setaf 2)
+orange=$(tput setaf 3)
+darkblue=$(tput setaf 4)
+purple=$(tput setaf 5)
+aqua=$(tput setaf 6)
+white=$(tput setaf 7)
 reset=$(tput sgr0)
 
 function usage() {
-    echo ""
-    echo "git deploy <environment>"
-    echo ""
-    echo "Known environments:"
-    find "$GIT_REPO_ROOT" -maxdepth 1 -name '.gitdeploy-*' -execdir basename {} \; | sed 's/^\.gitdeploy-/  /'
-    echo ""
-    echo "  See 'man git-deploy' for further information"
+	echo "Usage:"
+	echo "	git deploy <environment>"
+	echo ""
+	echo "Known environments:"
+	listenvs | sed 's/^/	/'
+	echo ""
+	echo "See 'man git-deploy' for further information"
 }
 
-# actually parse the options and do stuff
-while [[ $1 = -?* ]]; do
-    case $1 in
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        --fetch)
-            echo "Fetch updates"
-            echo "    git fetch -q"
-            ;;
-        *) ;;
-    esac
+function listenvs() {
+	git config -f "${DEPLOY_CONFIG}" --get-regexp '^environment\.' | sed -r 's/\.[a-zA-Z0-9-]+ .*//' | cut -d'.' -f 2- | sort | uniq
+}
 
-shift
-done
+
+
 
 if [ $# -ne 1 ] ; then
 	usage
 	exit 0
 fi
 
+if [ ! -f "$DEPLOY_CONFIG" ] ; then
+	echo "${red}Can't find .git-deploy config in the root of your repo, cannot continue.${reset}"
+	exit 2
+fi
+
+
 DEPLOY_ENV=$1
+if ! ( listenvs | grep -q "^${DEPLOY_ENV}$" ) ; then
+	echo "${red}There is no config for the environment '${DEPLOY_ENV}' in your .git-deploy file, cannot continue.${reset}"
+	exit 2
+fi
 echo "Deploying to: ${bold}${DEPLOY_ENV}${reset}"
 
 
-DEPLOY_CONFIG=".gitdeploy-${DEPLOY_ENV}"
-DEPLOY_CONFIG_PATH="${GIT_REPO_ROOT}/.gitdeploy-${DEPLOY_ENV}"
-echo "Looking for config file: ${DEPLOY_CONFIG}"
 
-if [ ! -f "${DEPLOY_CONFIG_PATH}" ] ; then
-	echo "${red}Can't find deploy config ${DEPLOY_CONFIG} in the root of your repo, exiting.${reset}"
-	exit 1
+# WHAT is the new tag?
+if ! git config -f "$DEPLOY_CONFIG" --get-regexp "^environment\.${DEPLOY_ENV}\.versioning" >/dev/null ; then
+	echo "${red}I don't know what tags to look for, you haven't set 'environment.${DEPLOY_ENV}.versioning' in your .git-deploy file.${reset}"
+	exit 3
 fi
 
-NUM_TAGS=$(git tag -l "${DEPLOY_ENV}-v*" | wc -l)
-if [ $NUM_TAGS -eq 0 ] ; then
-	echo "${red}Can't find any tags for the ${DEPLOY_ENV} environment, please create one first:${reset}"
-	echo "    git tag ${DEPLOY_ENV}-vNNN"
-	exit 1
+VERSIONING=$(git config -f "$DEPLOY_CONFIG" --get environment.${DEPLOY_ENV}.versioning)
+echo "Versioning style for ${DEPLOY_ENV} is: ${bold}${VERSIONING}${reset}"
+
+
+if ! git tag | git-deploy--helper $VERSIONING >/dev/null ; then
+	git tag | git-deploy--helper $VERSIONING
+else
+	tag_to_deploy=$( git tag | git-deploy--helper $VERSIONING )
+	echo "Will deploy ${green}${tag_to_deploy}${reset}"
 fi
 
-echo "Matching tags:"
-git tag -l "${DEPLOY_ENV}-v*" | sed 's/^/    /' | tac
-echo
 
-NEW_VERSION=$( git tag -l "${DEPLOY_ENV}-v*" | sed -r "s/^${DEPLOY_ENV}-v//" | tac | deploymentversionbumper.py bump_rc )
-NEW_TAG="${DEPLOY_ENV}-v${NEW_VERSION}"
-git tag "$NEW_TAG"
+echo "Pushing tag..."
+git push origin tag "$tag_to_deploy"
 
 
-echo "Pushing new tag: ${green}${NEW_TAG}${reset}"
-git push origin "$NEW_TAG"
-echo
+# We're not sanity-checking for the existence of these variables, #yolo
+ssh_user=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.user")
+ssh_host=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.host")
+ssh_command_template=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.command")
 
-source "$DEPLOY_CONFIG_PATH"
-#echo ssh "${GITDEPLOY_SSH_USER}@${GITDEPLOY_SSH_HOST}" -- make -C "$GITDEPLOY_DIR" "$GITDEPLOY_MAKETARGET" | head
-echo ssh "${GITDEPLOY_SSH_USER}@${GITDEPLOY_SSH_HOST}" -- make -C "$GITDEPLOY_DIR" "$NEW_TAG"
-ssh "${GITDEPLOY_SSH_USER}@${GITDEPLOY_SSH_HOST}" -- make -C "$GITDEPLOY_DIR" "$NEW_TAG"
 
+#echo "command template is: ${ssh_command_template}"
+ssh_command=$(printf "$ssh_command_template" $tag_to_deploy)
+#echo "filled command is:   ${ssh_command}"
+
+ssh "${ssh_user}@${ssh_host}" -- "$ssh_command"
+
+echo "${green}Done!${reset}"
