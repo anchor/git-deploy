@@ -122,6 +122,7 @@ def bump_rc(version):
     # case 2: newest tag is a release, no prerelease
 
     current = DeployableVersion(version)
+    command_template = "git tag {0}".format
 
     if current.prerelease:
         current.prerelease = current.prerelease[:1] + (current.prerelease[1]+1,)
@@ -134,7 +135,7 @@ def bump_rc(version):
             current.version = current.version[:1] + (current.version[1]+1, 0)
         current.prerelease = ('rc',1)
 
-    return str(current)
+    return command_template(str(current))
 
 
 def bump_release(version):
@@ -143,18 +144,20 @@ def bump_release(version):
     # case 2: newest tag is a release, bump the version
 
     current = DeployableVersion(version)
+    updated = DeployableVersion(version)
+    command_template = "git tag {0} {1}".format
 
-    if current.prerelease:
-        current.prerelease = None
+    if updated.prerelease:
+        updated.prerelease = None
     else:
         # 3-digit version number
-        if current.version[2]:
-            current.version = current.version[:2] + (current.version[2]+1,)
+        if updated.version[2]:
+            updated.version = updated.version[:2] + (updated.version[2]+1,)
         # 2-digit version number
         else:
-            current.version = current.version[:1] + (current.version[1]+1, 0)
+            updated.version = updated.version[:1] + (updated.version[1]+1, 0)
 
-    return str(current)
+    return command_template(str(updated), str(current))
 
 
 

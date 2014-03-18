@@ -69,7 +69,8 @@ if [ ! -f "$DEPLOY_CONFIG" ] ; then
 fi
 
 
-# XXX: WHAT should we tag?
+# XXX: WHAT should we tag? If it's not the latest and greatest, pass the commit
+#      hash through to the helper.
 
 # XXX: is it SAFE to tag?
 
@@ -85,15 +86,10 @@ echo "Versioning style is: ${bold}${VERSIONING}${reset}"
 if ! git tag | git-bump--helper $VERSIONING >/dev/null ; then
 	git tag | git-bump--helper $VERSIONING
 else
+	# The helper returns the command necessary to perform the work of bumping.
 	next_version_tag=$( git tag | git-bump--helper $VERSIONING )
-	echo "Next version is ${green}${next_version_tag}${reset}"
-fi
+	echo "Bumping: ${bold}${next_version_tag}${reset}"
 
-# XXX: Now apply the tag, probably calling another helper to figure out which commit to apply it to.
-#      We'll probably call the same helper script again (or just tell it to do it immediately).
-#
-# For staging, assume we're tagging the latest commit with a bumped version number (unless the user
-# passes us an argument to override with).
-#
-# For production, find the latest staging tag and attach it to that, eg.:
-#     git tag v1.2.3 v1.2.3rc42
+	# Now apply the tag. The helper knows how to apply the tag, and what to apply it to.
+	$next_version_tag
+fi
