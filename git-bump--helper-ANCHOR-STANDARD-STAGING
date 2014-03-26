@@ -195,7 +195,6 @@ def main(argv=None):
         try:
             VERSIONS.append( DeployableVersion(vstring) )
         except ValueError as e:
-            print "Version string '{0}' is not in the recognised format".format(vstring)
             pass
 
 
