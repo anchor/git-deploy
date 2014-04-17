@@ -26,7 +26,7 @@ function usage() {
 }
 
 function listenvs() {
-	git config -f "${DEPLOY_CONFIG}" --get-regexp '^environment\.' | sed -r 's/\.[a-zA-Z0-9-]+ .*//' | cut -d'.' -f 2- | sort | uniq
+	git config -f "${DEPLOY_CONFIG}" --get-regexp '^environment\.' | cut -d'.' -f 2 | sort | uniq
 }
 
 
