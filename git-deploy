@@ -85,7 +85,8 @@ do
 	#echo "command template is: ${ssh_command_template}"
 	ssh_command=$(printf "$ssh_command_template" $tag_to_deploy)
 	#echo "filled command is:   ${ssh_command}"
-	
+
+	set -e	
 	ssh "${ssh_user}@${ssh_host}" -- "$ssh_command"
 done
 
