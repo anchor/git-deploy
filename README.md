@@ -28,7 +28,7 @@ Config example
 [environment "production"]
 	versioning = ANCHOR-STANDARD-PRODUCTION
 	user = deploy
-	host = prod.example.com
+	host = prod1.example.com,prod2.example.com,prod3.example.com
 	command = cd /home/umad/app/ && git fetch --tags && git checkout %s && sudo /usr/local/bin/allah restart umad
 
 # vim: syntax=gitconfig

@@ -76,14 +76,17 @@ git push origin tag "$tag_to_deploy"
 
 # We're not sanity-checking for the existence of these variables, #yolo
 ssh_user=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.user")
-ssh_host=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.host")
+ssh_hosts=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.host"|tr "," " ")
 ssh_command_template=$(git config -f "$DEPLOY_CONFIG" --get "environment.${DEPLOY_ENV}.command")
+echo "${ssh_host}"
 
-
-#echo "command template is: ${ssh_command_template}"
-ssh_command=$(printf "$ssh_command_template" $tag_to_deploy)
-#echo "filled command is:   ${ssh_command}"
-
-ssh "${ssh_user}@${ssh_host}" -- "$ssh_command"
+for ssh_host in $ssh_hosts
+do
+	#echo "command template is: ${ssh_command_template}"
+	ssh_command=$(printf "$ssh_command_template" $tag_to_deploy)
+	#echo "filled command is:   ${ssh_command}"
+	
+	ssh "${ssh_user}@${ssh_host}" -- "$ssh_command"
+done
 
 echo "${green}Done!${reset}"
