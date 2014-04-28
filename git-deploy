@@ -87,7 +87,7 @@ do
 	#echo "filled command is:   ${ssh_command}"
 
 	set -e
-	echo "Deploying to: ${ssh_host}"
+	echo "${green}Deploying to: ${ssh_host}${reset}"
 	ssh "${ssh_user}@${ssh_host}" -- "$ssh_command"
 done
 
